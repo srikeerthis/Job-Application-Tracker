@@ -1,2 +1,8 @@
 env/
 *.json
+*.db
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pkl
