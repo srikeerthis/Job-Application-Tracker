@@ -25,27 +25,35 @@ def get_gmail_service():
     except HttpError as error:
         print(f'An error occurred: {error}')
 
-def fetch_emails(service):
+def fetch_emails(service, return_full_message=False):
     try:
-        results = service.users().messages().list(userId='me', labelIds=['INBOX']).execute()
+        results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults = 10).execute()
         matching_emails = results.get('messages', [])
         if not matching_emails:
             print('No emails found.')
-            return 
-        print(f'Found {len(matching_emails)} emails.')
-
-        for email in matching_emails:
-            msg = service.users().messages().get(userId='me', id=email['id']).execute()
-            headers = msg['payload']['headers']
-            subject = next((header['value'] for header in headers if header['name'] == 'Subject'), None)
-            print(f'Subject: {subject}')
+            return []
+        
+        if not return_full_message:
+            for email in matching_emails:
+                msg = service.users().messages().get(userId='me', id=email['id']).execute()
+                headers = msg['payload']['headers']
+                subject = next((header['value'] for header in headers if header['name'] == 'Subject'), None)
+                print(f'Subject: {subject}')
+            return None
+        else:
+            messages = []
+            for email in matching_emails:
+                msg = service.users().messages().get(userId='me', id=email['id']).execute()
+                messages.append(msg)
+            return messages
     except HttpError as error:
         print(f'An error occurred while fetching emails: {error}')
+        return []
 
-if __name__ == '__main__':
-    service = get_gmail_service()
-    if service:
-        print("Gmail service created successfully.")
-        fetch_emails(service=service)
-    else:
-        print("Failed to create Gmail service.")
+# if __name__ == '__main__':
+#     service = get_gmail_service()
+#     if service:
+#         print("Gmail service created successfully.")
+#         fetch_emails(service=service)
+#     else:
+#         print("Failed to create Gmail service.")
